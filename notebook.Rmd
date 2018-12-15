@@ -9,6 +9,7 @@ output: html_notebook
 ```{r}
 library("tidyverse")
 library("caret")
+library("dplyr")
 
 data <- read_delim("data/DESAFIO HACKATON DEZEMBRO 2018.csv", 
      ";", escape_double = FALSE, trim_ws = TRUE)
@@ -139,6 +140,36 @@ propFinalFilho <- length(propFinalFilho$`P0001-REGIÃO`) / length(votosFinais$`P
 
 propFinalFilho
 propFinalPescGrosso
+
+```
+
+```{r}
+DESAFIO_HACKATON_DEZEMBRO_2018 <- data
+
+DESAFIO_HACKATON_DEZEMBRO_2018$`DIA DA COLETA` <- substr(DESAFIO_HACKATON_DEZEMBRO_2018$`FIM COLETA`,6,10)
+
+
+#votos para pescoço grosso
+respostasPC <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)")
+
+#votos para filho de papai
+respostasFP <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
+
+respostasGovernador <- rbind(respostasFP, respostasPC)
+
+#votos totais por dia
+respostasGovernadorPorData <- respostasGovernador %>% group_by(`DIA DA COLETA`) %>% summarise(porcentagemPorDia = length(`DIA DA COLETA`)) 
+
+#votos para pescoço grosso por dia 
+respostasPGporData <- respostasPC %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaPG = length(`DIA DA COLETA`))
+respostasFPporData <- respostasFP %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaFP = length(`DIA DA COLETA`))
+respostasGovernadorPorDataAmbos <- respostasGovernadorPorData
+respostasGovernadorPorDataAmbos$votosParaPG <- respostasPGporData$votosParaPG
+respostasGovernadorPorDataAmbos$votosParaFP <- respostasFPporData$votosParaFP
+
+
+plotVotacoesDiarias <- ggplot(data = respostasGovernadorPorDataAmbos, aes(x = as.factor(`DIA DA COLETA`), y = as.numeric(porcentagemPorDia) ,group=1)) + geom_line(aes(y = 100*(votosParaPG/porcentagemPorDia), color="Pescoço Grosso"))+ geom_line(aes(y = 100*(votosParaFP/porcentagemPorDia) , color="Filho de Papai"))+scale_y_continuous(limits =c(0,100))
+plotVotacoesDiarias
 
 ```
 
