@@ -1,0 +1,14 @@
+"0","library(""tidyverse"")"
+"0","library(""caret"")"
+"0","data <- read_delim(""data/DESAFIO HACKATON DEZEMBRO 2018.csv"", "
+"0","     "";"", escape_double = FALSE, trim_ws = TRUE)"
+"2","Parsed with column specification:
+cols(
+  .default = col_character(),
+  QUESTIONARIO = col_integer(),
+  `INICIO COLETA` = col_datetime(format = """"),
+  `FIM COLETA` = col_datetime(format = """")
+)
+"
+"2","See spec(...) for full column specifications.
+"

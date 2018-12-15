@@ -1,0 +1,144 @@
+---
+title: "Predição de Eleições"
+output: html_notebook
+---
+
+
+
+
+```{r}
+library("tidyverse")
+library("caret")
+
+data <- read_delim("data/DESAFIO HACKATON DEZEMBRO 2018.csv", 
+     ";", escape_double = FALSE, trim_ws = TRUE)
+```
+
+
+
+# Dividindo conjuntos masculinos e femininos
+```{r}
+
+masculinos <- subset(data, data$`P0006-SEXO` == "0002-MASCULINO")
+femininos <- subset(data, data$`P0006-SEXO` == "0001-FEMININO")
+
+mascProp <- (length(masculinos$PESQUISADOR) / length(data$PESQUISADOR)) * 100
+femProp <- (length(femininos$PESQUISADOR) / length(data$PESQUISADOR)) * 100
+
+mascProp
+femProp
+```
+
+
+# Prevendo o resultado das eleições
+```{r}
+
+EleitoresFemininosDeFdePapai <- subset(femininos, femininos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
+
+EleitoresFemininosDePescGrosso <- subset(femininos, femininos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)")
+
+outrosFemin <- subset(femininos, femininos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != "0001-FILHO DE PAPAI (PSB)")
+
+outrosFemin <- subset(outrosFemin, outrosFemin$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != "0002-PESCOÇO GROSSO (PSD)")
+
+propFilhoDePapai <- length(EleitoresFemininosDeFdePapai$PESQUISADOR) / length(femininos$PESQUISADOR)
+propPescGrosso <- length(EleitoresFemininosDePescGrosso$PESQUISADOR) / length(femininos$PESQUISADOR) 
+propOutros <- length(outrosFemin$PESQUISADOR) / length(femininos$PESQUISADOR) 
+
+```
+
+
+### Resultados Gerais nas Pesquisas para Mulheres
+
+```{r}
+propFilhoDePapai
+propPescGrosso
+propOutros
+```
+
+
+```{r}
+EleitoresMascDeFdePapai <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
+
+EleitoresMascDePescGrosso <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)")
+
+outrosMasc <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != "0001-FILHO DE PAPAI (PSB)")
+
+outrosMasc <- subset(outrosMasc, outrosMasc$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != "0002-PESCOÇO GROSSO (PSD)")
+
+propFilhoDePapai <- length(EleitoresMascDeFdePapai$PESQUISADOR) / length(masculinos$PESQUISADOR)
+propPescGrosso <- length(EleitoresMascDePescGrosso$PESQUISADOR) / length(masculinos$PESQUISADOR) 
+propOutros <- length(outrosMasc$PESQUISADOR) / length(masculinos$PESQUISADOR) 
+
+```
+
+### Resultados gerais nas pesquisas para homens
+
+```{r}
+propFilhoDePapai
+propPescGrosso
+propOutros
+```
+
+## Modelo de Predição
+
+```{r}
+
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(F)` <- NULL
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(E)` <- NULL
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(D)` <- NULL
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(C)` <- NULL
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(B)` <- NULL
+data$`P0011-EM QUAIS DESTES MEIOS DE COMUNICAÇÃO O (A) SR. (A) TEM ASSISTIDO OU OUVIDO A PROPAGANDA POLÍTICA DESTA ELEIÇÃO? (RM ESTIMULADA)(A)` <- NULL
+data$PESQUISADOR <- NULL
+data$QUESTIONARIO <- NULL
+
+votosValidos <- subset(data, data$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
+
+votosValidos <- rbind(votosValidos, subset(data, data$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)"))
+
+#Total de Votos Válidos
+length(votosValidos$`P0006-SEXO`)
+
+
+ctrl <- trainControl(method = "cv", number = 5, search = "random")
+set.seed(2)
+
+formula = as.formula(`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` ~.)
+
+modelo.rl <- train(formula,
+                   data = votosValidos,
+                   method = "glm",
+                   na.action = na.pass,
+                   family = "binomial",
+                   trControl = ctrl)
+
+#Acuracia
+modelo.rl$results$Accuracy
+
+
+#Predizendo a votação dos eleitores de acordo com o modelo
+
+#Prevendo os resultados de quem não respondeu e quem não sabe
+votosFinais <- rbind(votosValidos,
+                     subset(data, data$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0005-NÃO RESPONDEU"))
+
+
+votosFinais <- rbind(votosFinais,
+                     subset(data, data$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0004-NÃO SABE"))
+
+
+votosFinais$Pred <- predict(modelo.rl, votosFinais)
+
+propFinalPescGrosso <- subset(votosFinais, votosFinais$Pred == "0002-PESCOÇO GROSSO (PSD)")
+propFinalPescGrosso <- length(propFinalPescGrosso$`P0001-REGIÃO`) / length(votosFinais$`P0001-REGIÃO`)
+
+propFinalFilho <- subset(votosFinais, votosFinais$Pred == "0001-FILHO DE PAPAI (PSB)")
+propFinalFilho <- length(propFinalFilho$`P0001-REGIÃO`) / length(votosFinais$`P0001-REGIÃO`)
+
+
+propFinalFilho
+propFinalPescGrosso
+
+```
+

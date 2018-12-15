@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544892359797.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B24F32D0",
+    "lastKnownWriteTime" : 1544892235,
+    "last_content_update" : 1544892359797,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "4B8C24CC",
+        "caption" : "votosFinais",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=votosFinais&cache_key=4B8C24CC",
+        "displayedObservations" : 3186,
+        "environment" : "",
+        "object" : "votosFinais",
+        "preview" : 0,
+        "totalObservations" : 3186,
+        "variables" : 20
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

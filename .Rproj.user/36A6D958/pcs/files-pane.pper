@@ -1,0 +1,9 @@
+{
+    "path" : "~/sitta",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}
