@@ -6,6 +6,8 @@ output: html_notebook
 
 
 
+Primeiro carregamos e estudamos os dados, e carregamos também as bibliotecas importantes para o desenvolvimento do projeto.
+
 ```{r}
 library("tidyverse")
 library("caret")
@@ -18,6 +20,10 @@ data <- read_delim("data/DESAFIO HACKATON DEZEMBRO 2018.csv",
 
 
 # Dividindo conjuntos masculinos e femininos
+
+
+Inicialmente, decidimos agrupar os dados em dois conjuntos, os femininos e os masculinos, já que haviam algumas perguntas eram respondidas somente por pessoas de um unico sexo
+
 ```{r}
 
 masculinos <- subset(data, data$`P0006-SEXO` == "0002-MASCULINO")
@@ -31,7 +37,15 @@ femProp
 ```
 
 
+Acima estão as proporções de homens e mulheres que participaram da pesquisa
+
 # Prevendo o resultado das eleições
+
+Aqui começamos o processo de prever o resultado das eleições em questão.
+
+
+Criamos um conjunto de votos válidos, onde removemos os que não sabiam, não responderam e não votariam em nenhum dos dois candidatos.
+
 ```{r}
 
 EleitoresFemininosDeFdePapai <- subset(femininos, femininos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
@@ -49,7 +63,10 @@ propOutros <- length(outrosFemin$PESQUISADOR) / length(femininos$PESQUISADOR)
 ```
 
 
+Decidimos exibir as proporções de dados femininos e masculinos para enxergar a direção das pesquisas
+
 ### Resultados Gerais nas Pesquisas para Mulheres
+
 
 ```{r}
 propFilhoDePapai
@@ -57,6 +74,7 @@ propPescGrosso
 propOutros
 ```
 
+Acima temos as proporções de intençoes de votos femininos para os candidatos 0001-FILHO DE PAPAI (PSB) e 0002-PESCOÇO GROSSO (PSD) e os outros, ou seja, os que não escolheram nem um nem outor, não respoderam, ou não sabiam.
 
 ```{r}
 EleitoresMascDeFdePapai <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
@@ -80,8 +98,49 @@ propFilhoDePapai
 propPescGrosso
 propOutros
 ```
+Acima temos as proporções de intençoes de votos masculinos para os candidatos 0001-FILHO DE PAPAI (PSB) e 0002-PESCOÇO GROSSO (PSD) e os outros, ou seja, os que não escolheram nem um nem outor, não respoderam, ou não sabiam.
 
-## Modelo de Predição
+
+## Status geral
+
+Abaixo plotamos uma visualização de como andaram as pesquisas de acordo com o dia
+
+```{r}
+DESAFIO_HACKATON_DEZEMBRO_2018 <- data
+
+DESAFIO_HACKATON_DEZEMBRO_2018$`DIA DA COLETA` <- substr(DESAFIO_HACKATON_DEZEMBRO_2018$`FIM COLETA`,6,10)
+
+
+#votos para pescoço grosso
+respostasPC <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)")
+
+#votos para filho de papai
+respostasFP <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
+
+respostasGovernador <- rbind(respostasFP, respostasPC)
+
+#votos totais por dia
+respostasGovernadorPorData <- respostasGovernador %>% group_by(`DIA DA COLETA`) %>% summarise(porcentagemPorDia = length(`DIA DA COLETA`)) 
+
+#votos para pescoço grosso por dia 
+respostasPGporData <- respostasPC %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaPG = length(`DIA DA COLETA`))
+respostasFPporData <- respostasFP %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaFP = length(`DIA DA COLETA`))
+respostasGovernadorPorDataAmbos <- respostasGovernadorPorData
+respostasGovernadorPorDataAmbos$votosParaPG <- respostasPGporData$votosParaPG
+respostasGovernadorPorDataAmbos$votosParaFP <- respostasFPporData$votosParaFP
+
+
+plotVotacoesDiarias <- ggplot(data = respostasGovernadorPorDataAmbos, aes(x = as.factor(`DIA DA COLETA`), y = as.numeric(porcentagemPorDia) ,group=1)) + geom_line(aes(y = 100*(votosParaPG/porcentagemPorDia), color="Pescoço Grosso"))+ geom_line(aes(y = 100*(votosParaFP/porcentagemPorDia) , color="Filho de Papai"))+scale_y_continuous(limits =c(0,100))
+plotVotacoesDiarias
+
+```
+
+
+### Modelo de Predição
+
+
+Por fim, construimos nossos modelo de predição baseado em uma regressão logistica, que usou os parametros para estimar a votação de cada um dos eleitores, inclusive dos eleitores que nao responderam ou não sabiam
+
 
 ```{r}
 
@@ -143,33 +202,34 @@ propFinalPescGrosso
 
 ```
 
+Acima temos a proporção final da nossa predição. Nossos resultados apontam que o candidato Pescoço Grosso vence as eleições com 59.1% dos votos válidos contra 40% do candidato Filho de Papai
+
+
+## Variáveis importantes
+
+Ao prever o resultado utilizando um modelo de regressão logistica, podemos inferir as variáveis mais importantes para a estrutura do modelo, e consideramos que elas sejam as variaveis mais importantes no contexto geral, elas melhor descrevem nossa variável principal.
+
 ```{r}
-DESAFIO_HACKATON_DEZEMBRO_2018 <- data
-
-DESAFIO_HACKATON_DEZEMBRO_2018$`DIA DA COLETA` <- substr(DESAFIO_HACKATON_DEZEMBRO_2018$`FIM COLETA`,6,10)
-
-
-#votos para pescoço grosso
-respostasPC <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0002-PESCOÇO GROSSO (PSD)")
-
-#votos para filho de papai
-respostasFP <- subset(DESAFIO_HACKATON_DEZEMBRO_2018,DESAFIO_HACKATON_DEZEMBRO_2018$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == "0001-FILHO DE PAPAI (PSB)")
-
-respostasGovernador <- rbind(respostasFP, respostasPC)
-
-#votos totais por dia
-respostasGovernadorPorData <- respostasGovernador %>% group_by(`DIA DA COLETA`) %>% summarise(porcentagemPorDia = length(`DIA DA COLETA`)) 
-
-#votos para pescoço grosso por dia 
-respostasPGporData <- respostasPC %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaPG = length(`DIA DA COLETA`))
-respostasFPporData <- respostasFP %>% group_by(`DIA DA COLETA`) %>% summarise(votosParaFP = length(`DIA DA COLETA`))
-respostasGovernadorPorDataAmbos <- respostasGovernadorPorData
-respostasGovernadorPorDataAmbos$votosParaPG <- respostasPGporData$votosParaPG
-respostasGovernadorPorDataAmbos$votosParaFP <- respostasFPporData$votosParaFP
-
-
-plotVotacoesDiarias <- ggplot(data = respostasGovernadorPorDataAmbos, aes(x = as.factor(`DIA DA COLETA`), y = as.numeric(porcentagemPorDia) ,group=1)) + geom_line(aes(y = 100*(votosParaPG/porcentagemPorDia), color="Pescoço Grosso"))+ geom_line(aes(y = 100*(votosParaFP/porcentagemPorDia) , color="Filho de Papai"))+scale_y_continuous(limits =c(0,100))
-plotVotacoesDiarias
-
+varImp(modelo.rl)
 ```
 
+
+## Dificuldades 
+
+
+ - Sentimos dificuldade em utilizar a variável 11, sobre em qual local se informam os entrevistados, nossa ideia seria colapsar tal variável em uma unica coluna, mas isso nos tiraria muito tempo
+
+ - Estavamos em final de periodo, tava todo mundo cansado pós semana de provas
+
+ - Tempo também foi um fator limitante no que poderiamos desenvolver
+ 
+ 
+ ## O que fariamos com mais tempo
+ 
+ #### Em cerca de 2 meses poderiamos
+ 
+ - Realizar testes estatisticos para estudar quão bem o conjunto de dados representa a população
+ 
+ - Testar variáveis de regressão logistica multipla, como RandomFlorests, para estudar o impacto das pessoas indecissas e comparar esses resultados com os modelos que já aplicamos, que utilizam duas classes
+ 
+ - Criar e comparar visualizações para entender melhor nossos resultados e como podemos melhora-los

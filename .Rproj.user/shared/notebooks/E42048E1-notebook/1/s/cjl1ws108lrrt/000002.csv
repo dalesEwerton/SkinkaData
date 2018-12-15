@@ -1,7 +1,0 @@
-"0","EleitoresMascDeFdePapai <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == ""0001-FILHO DE PAPAI (PSB)"")"
-"0","EleitoresMascDePescGrosso <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` == ""0002-PESCOÇO GROSSO (PSD)"")"
-"0","outrosMasc <- subset(masculinos, masculinos$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != ""0001-FILHO DE PAPAI (PSB)"")"
-"0","outrosMasc <- subset(outrosMasc, outrosMasc$`P0013-SE AS ELEIÇÕES PARA GOVERNADOR DE CAFUÇU FOSSEM HOJE, EM QUAL DESTES CANDIDATOS O (A) SR. (A) VOTARIA? (ESTIMULADA RU)` != ""0002-PESCOÇO GROSSO (PSD)"")"
-"0","propFilhoDePapai <- length(EleitoresMascDeFdePapai$PESQUISADOR) / length(masculinos$PESQUISADOR)"
-"0","propPescGrosso <- length(EleitoresMascDePescGrosso$PESQUISADOR) / length(masculinos$PESQUISADOR) "
-"0","propOutros <- length(outrosMasc$PESQUISADOR) / length(masculinos$PESQUISADOR) "
